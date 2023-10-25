@@ -1,63 +1,72 @@
 <?php
-require_once('connect.php');
 
-session_start();
+    include 'connect.php';
 
-if (isset($_SESSION['user'])) {
-    header('Location: welcome.php');
-}
+    session_start();
 
-$errors = [];
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = $_POST['name'];
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-    $date = date('Y-m-d H:i:s');
+    if (isset($_SESSION['user'])) {
 
-    if (empty($name)) {
-        $errors[] = "Name is required!";
+        header('Location: welcome.php');
     }
 
-    if (empty($email)) {
-        $errors[] = "Email is required!";
-    }
+    $errors = [];
 
-    if (empty($password)) {
-        $errors[] = "Password is required!";
-    }
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    if (!empty($password) && strlen($password) < 8) {
-        $errors[] = "Password must be alteast 8 characters long.";
-    }
+        $name = $_POST['name'];
+        $email = $_POST['email'];
+        $password = $_POST['password'];
+        $date = date('Y-m-d H:i:s');
+        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-    if (empty($errors)) {
-        $query = "SELECT name, email FROM users WHERE email = :email";
-        $stmt = $pdo->prepare($query);
-        $stmt->bindValue(":email", $email);
-        $stmt->execute();
-        $count = $stmt->rowCount();
-
-        if ($count > 0) {
-            echo "<p class=alert alert-danger>Another account with the same email already exists</p>";
-            header('Location: '. $_SERVER['REQUEST_URI']);
+        if (empty($name)) {
+            $errors[] = "Name is required!";
         }
-        $query = "INSERT INTO users(name, email, password, created_at) VALUES(:name, :email, :password, :date)";
-        // $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare($query);
-        $stmt->bindValue(":name", $name);
-        $stmt->bindValue(":email", $email);
-        $stmt->bindValue(":password", $password);
-        $stmt->bindValue(":date", $date);
-        $stmt->execute();
 
-        header('Location: index.php');
-        exit();
+        if (empty($email)) {
+            $errors[] = "Email is required!";
+        }
+
+        if (empty($password)) {
+            $errors[] = "Password is required!";
+        }
+
+        if (!empty($password) && strlen($password) < 8) {
+            $errors[] = "Password must be alteast 8 characters long.";
+        }
+
+        if (empty($errors)) {
+
+            $query = "SELECT name, email FROM users WHERE email = :email";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(":email", $email);
+            $stmt->execute();
+            $count = $stmt->rowCount();
+
+            if ($count > 0) {
+
+                echo "<p class=alert alert-danger>Another account with the same email already exists</p>";
+                header('Location: '. $_SERVER['REQUEST_URI']);
+
+            }
+
+            $query = "INSERT INTO users(name, email, password, created_at) VALUES(:name, :email, :password, :date)";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(":name", $name);
+            $stmt->bindValue(":email", $email);
+            $stmt->bindValue(":password", $hashed_password);
+            $stmt->bindValue(":date", $date);
+            $stmt->execute();
+
+            header('Location: index.php');
+            exit();
+        }
+
     }
-
-}
 
 ?>
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">

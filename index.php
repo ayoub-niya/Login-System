@@ -1,47 +1,59 @@
 <?php
-require_once('connect.php');
 
-session_start();
+	include 'connect.php';
 
-if (isset($_SESSION['user'])) {
-    header('Location: welcome.php');
-}
+	session_start();
 
-$errors = [];
+	if (isset($_SESSION['user'])) {
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+		header('Location: welcome.php');
 
-	if (empty($email)) {
-		$errors[] = "Email is required!";
-    }
-	
-    if (empty($password)) {
-		$errors[] = "Password is required!";
-    }
-	if (empty($errors)) {
-
-		$query = "SELECT * FROM users WHERE email = :email AND password = :password";
-		$stmt = $pdo->prepare($query);
-		$stmt->bindValue(":email", $email);
-		$stmt->bindValue(":password", $password);
-		$stmt->execute();
-		$credentials = $stmt->fetch(PDO::FETCH_ASSOC);
-		$count = $stmt->rowCount();
-
-		if ($count > 0) {
-			$_SESSION['user']['id'] = $credentials['id'];
-			$_SESSION['user']['name'] = $credentials['name'];
-			$_SESSION['user']['email'] = $credentials['email'];
-
-			header('Location: welcome.php');
-		}
 	}
 
-}
+	$errors = [];
+
+	if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+
+		$email = $_POST['email'];
+		$password = $_POST['password'];
+		$hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+		if (empty($email)) {
+
+			$errors[] = "Email is required!";
+
+		}
+		
+		if (empty($password)) {
+
+			$errors[] = "Password is required!";
+
+		}
+
+		if (empty($errors)) {
+
+			$query = "SELECT * FROM users WHERE email = :email AND password = :password";
+			$stmt = $pdo->prepare($query);
+			$stmt->bindValue(":email", $email);
+			$stmt->bindValue(":password", $hashed_password);
+			$stmt->execute();
+			$credentials = $stmt->fetch(PDO::FETCH_ASSOC);
+			$count = $stmt->rowCount();
+
+			if ($count > 0) {
+
+				$_SESSION['user']['id'] = $credentials['id'];
+				$_SESSION['user']['name'] = $credentials['name'];
+				$_SESSION['user']['email'] = $credentials['email'];
+
+				header('Location: welcome.php');
+			}
+		}
+
+	}
 ?>
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
